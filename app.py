@@ -15,11 +15,9 @@ def load_geojson():
 # Load the ranking data
 @st.cache_data
 def load_data():
-    file = st.file_uploader("Upload CSV File", type=["csv"])
-    if file:
-        df = pd.read_csv(file)
-        return df
-    return None
+    url = "https://github.com/gabriel-hill1207/streamlit-lad-app/blob/main/All_SIC_Agglomeration_Results.csv"
+    df = pd.read_csv(url)
+    return df
 
 # Define function to create map
 def create_map(data, geojson_data, sic_column):
