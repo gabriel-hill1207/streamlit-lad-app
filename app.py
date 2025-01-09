@@ -1,6 +1,5 @@
 
 ##Libraries
-!pip install streamlit
 import streamlit as st
 import pandas as pd
 import geopandas as gpd
