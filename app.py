@@ -12,10 +12,10 @@ def load_geojson():
     geojson_data = requests.get(url).json()
     return geojson_data
 
-# Load the ranking data
+# Load the ranking data from GitHub
 @st.cache_data
 def load_data():
-    url = "https://github.com/gabriel-hill1207/streamlit-lad-app/blob/main/All_SIC_Agglomeration_Results.csv"
+    url = "https://raw.githubusercontent.com/your-username/repository-name/branch-name/All_SIC_Agglomeration_Results.csv"
     df = pd.read_csv(url)
     return df
 
@@ -50,7 +50,7 @@ def create_map(data, geojson_data, sic_column):
 def main():
     st.title("Interactive Map: LAD Rankings by SIC Code")
     st.write(
-        "Upload a CSV file containing LAD rankings for various SIC codes. Toggle between SIC codes to view the decile map."
+        "This app visualizes LAD rankings for various SIC codes. Select a SIC code to view the decile map."
     )
 
     geojson_data = load_geojson()
