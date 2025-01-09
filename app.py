@@ -24,7 +24,7 @@ def create_map(data, geojson_data, sic_column):
     # Merge ranking data with GeoJSON
     data['decile'] = pd.qcut(data[sic_column], 10, labels=False)
     merged_data = {
-        row['LAD_Name']: row['decile']
+        row['LAD_Code']: row['decile']
         for _, row in data.iterrows()
     }
 
@@ -35,7 +35,7 @@ def create_map(data, geojson_data, sic_column):
     Choropleth(
         geo_data=geojson_data,
         data=data,
-        columns=["LAD_Name", sic_column],
+        columns=["LAD_Code", sic_column],
         key_on="feature.properties.LAD21NM",
         fill_color="YlOrRd",
         fill_opacity=0.7,
@@ -58,7 +58,7 @@ def main():
 
     if data is not None:
         # Select SIC code column
-        sic_columns = [col for col in data.columns if col != "LAD_Name"]
+        sic_columns = [col for col in data.columns if col != "LAD_Code"]
         selected_sic = st.selectbox("Select SIC Code", options=sic_columns)
 
         # Create and display map
