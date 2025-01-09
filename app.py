@@ -1,52 +1,71 @@
 import streamlit as st
 import pandas as pd
-import geopandas as gpd
-import plotly.express as px
+import folium
+from folium import Choropleth
+from streamlit_folium import st_folium
 
-# Set Streamlit page layout
-st.set_page_config(layout="wide")
+# Load the LAD shapefile (GeoJSON)
+@st.cache_data
+def load_geojson():
+    import requests
+    url = "https://opendata.arcgis.com/datasets/fafd3d02c6c9431f812b154a14f98e09_0.geojson"  # Example LAD GeoJSON
+    geojson_data = requests.get(url).json()
+    return geojson_data
 
-# Load the data
-@st.cache
+# Load the ranking data
+@st.cache_data
 def load_data():
-    # Load rankings data from CSV
-    rankings = pd.read_csv("LAD_rankings.csv")
-    
-    # Load LAD boundaries from GeoJSON
-    lad_boundaries = gpd.read_file("LAD_boundaries.geojson")
-    
-    return rankings, lad_boundaries
+    file = st.file_uploader("Upload CSV File", type=["csv"])
+    if file:
+        df = pd.read_csv(file)
+        return df
+    return None
 
-# Load and process the data
-rankings, lad_boundaries = load_data()
+# Define function to create map
+def create_map(data, geojson_data, sic_column):
+    # Merge ranking data with GeoJSON
+    data['decile'] = pd.qcut(data[sic_column], 10, labels=False)
+    merged_data = {
+        row['LAD_Name']: row['decile']
+        for _, row in data.iterrows()
+    }
 
-# Merge the rankings with LAD boundaries
-merged_data = lad_boundaries.merge(rankings, left_on="LAD_Code", right_on="LAD_Code")
+    # Initialize Folium Map
+    m = folium.Map(location=[52.3555, -1.1743], zoom_start=6)  # Approx center of England
 
-# Sidebar for category selection
-st.sidebar.header("Select Category")
-category = st.sidebar.selectbox(
-    "Choose a performance category to display:",
-    [col for col in rankings.columns if col != "LAD_Code"]
-)
+    # Add Choropleth Layer
+    Choropleth(
+        geo_data=geojson_data,
+        data=data,
+        columns=["LAD_Name", sic_column],
+        key_on="feature.properties.LAD21NM",
+        fill_color="YlOrRd",
+        fill_opacity=0.7,
+        line_opacity=0.2,
+        legend_name=f"{sic_column} Ranking by Decile",
+        bins=10,
+    ).add_to(m)
 
-# Main app title
-st.title(f"Performance Heatmap for {category}")
-st.write("This map displays LAD rankings (1 = highest, 360 = lowest).")
+    return m
 
-# Create the map using Plotly
-fig = px.choropleth(
-    merged_data,
-    geojson=merged_data.geometry,
-    locations=merged_data.index,
-    color=category,
-    color_continuous_scale="Viridis",
-    range_color=(1, 360),
-    title=f"LAD Rankings: {category}",
-)
-fig.update_geos(fitbounds="locations", visible=False)
-st.plotly_chart(fig, use_container_width=True)
+# Main app
+def main():
+    st.title("Interactive Map: LAD Rankings by SIC Code")
+    st.write(
+        "Upload a CSV file containing LAD rankings for various SIC codes. Toggle between SIC codes to view the decile map."
+    )
 
-# Display the data table
-st.subheader("Data Table")
-st.write(rankings)
+    geojson_data = load_geojson()
+    data = load_data()
+
+    if data is not None:
+        # Select SIC code column
+        sic_columns = [col for col in data.columns if col != "LAD_Name"]
+        selected_sic = st.selectbox("Select SIC Code", options=sic_columns)
+
+        # Create and display map
+        map_object = create_map(data, geojson_data, selected_sic)
+        st_folium(map_object, width=700, height=500)
+
+if __name__ == "__main__":
+    main()
