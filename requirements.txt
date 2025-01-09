@@ -1,4 +1,4 @@
 streamlit
+folium
 pandas
-geopandas
-plotly
+streamlit-folium
