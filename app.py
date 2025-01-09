@@ -15,7 +15,7 @@ def load_geojson():
 # Load the ranking data from GitHub
 @st.cache_data
 def load_data():
-    url = "https://raw.githubusercontent.com/your-username/repository-name/branch-name/All_SIC_Agglomeration_Results.csv"
+    url = "https://raw.githubusercontent.com/gabriel-hill1207/streamlit-lad-app/main/All_SIC_Agglomeration_Results.csv"
     df = pd.read_csv(url)
     return df
 
